@@ -48,12 +48,12 @@ struct plane : shape {
 
 };
 
-int readScene( char *sceneFileName ) {
+int readScene( char *sceneFileName, shape **objects ) {
 
     FILE *stream = fopen( sceneFileName, "r" );
     assert( stream != NULL );
 
-    return 0
+    return 0;
 
 }
 
@@ -68,9 +68,9 @@ int main(int argc, char *argv[])
     }
     else {
 
-        
+        shape *objects;
 
-        if ( readScene( argv[4],  ) == 1 ) {
+        if ( readScene( argv[4], &objects ) == 1 ) {
 
         }
         else {
