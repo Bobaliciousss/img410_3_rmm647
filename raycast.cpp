@@ -52,7 +52,7 @@ struct plane : shape {
 
 int readScene( char *sceneFileName, shape **objects ) {
 
-    printf("%s\n", sceneFileName);
+    printf("\nReading %s\n\n", sceneFileName);
 
     FILE *stream = fopen( sceneFileName, "r" );
     assert( stream != NULL );
@@ -69,25 +69,66 @@ int readScene( char *sceneFileName, shape **objects ) {
     char tempObject[10];
     std::string tempObjString = tempObject; // For comparison
     std::string endOfScene = "end";
+    assert( fscanf( stream, "%s ", tempObject ) == 1 ); // Primer
+    tempObjString = tempObject;
+
+    // std::cout << tempObjString << "\n";
 
     while ( tempObjString != endOfScene ) {
 
-        int outerResult = fscanf( stream, "%s ", tempObject );
-        assert( outerResult == 1 );
-        tempObjString = tempObject;
-        std::cout << tempObjString << "\n";
+        
 
         int c = fgetc( stream ); // Primer
         char tempProperty[10];
         std::string tempPropString = tempProperty;
+
         while ( c != '\n' )
         {
-
+            
             ungetc( c, stream );
-            fscanf( stream, "%s:", tempProperty );
-            std::cout << tempPropString;
+            
+            int tempInnerResult = fscanf( stream, "%s", tempProperty );
+            assert( tempInnerResult > 0 && tempInnerResult < 5 );
+            tempPropString = tempProperty;
+            // std::cout << tempPropString << "\n";
+
+            float scannedFloat1;
+            float scannedFloat2;
+            float scannedFloat3;
+            if ( tempPropString == "height:" ) {
+                fscanf( stream, "%f", &scannedFloat1 );
+                std::cout << "SCANNED HEIGHT\n";
+            }
+            else if ( tempPropString == "width:" ) {
+                fscanf( stream, "%f", &scannedFloat1 );
+                std::cout << "SCANNED WIDTH\n";
+            }
+            else if ( tempPropString == "position:" ) {
+                fscanf( stream, "%f %f %f", &scannedFloat1, &scannedFloat2, &scannedFloat3 );
+                std::cout << "SCANNED POSITION\n";
+            }
+            else if ( tempPropString == "radius:" ) {
+                fscanf( stream, "%f", &scannedFloat1 );
+                std::cout << "SCANNED RADIUS\n";
+            }
+            else if ( tempPropString == "normal:" ) {
+                fscanf( stream, "%f %f %f", &scannedFloat1, &scannedFloat2, &scannedFloat3 );
+                std::cout << "SCANNED NORMAL\n";
+            }
+            else if ( tempPropString == "c_diff:" ) {
+                fscanf( stream, "%f %f %f", &scannedFloat1, &scannedFloat2, &scannedFloat3 );
+                std::cout << "SCANNED C_DIFF\n";
+            }
+
+            c = fgetc( stream );
 
         }
+
+        std::cout << "END OF LINE\n\n";
+
+        assert( fscanf( stream, "%s ", tempObject ) == 1 );
+        tempObjString = tempObject;
+        // std::cout << tempObjString << "\n";
         
     }
 
