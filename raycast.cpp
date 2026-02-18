@@ -4,7 +4,6 @@
 #include <cstring>
 #include <string>
 #include "ppm.h"
-#include "v3math.h"
 
 extern "C" {
     #include "v3math.h"
@@ -160,7 +159,7 @@ int readScene( char *sceneFileName, shape ***objects, camera *camera, int *numbe
             }
             else if ( tempPropString == "position:" ) {
 
-                float position[3] = { 0, 0, 0 };
+                float *position = new float[3];
                 fscanf( stream, "%f %f %f", &( position[0] ), &( position[1] ), &( position[2] ) );
                 // std::cout << "SCANNED POSITION\n";
                 ( *objects )[ objectsTableIndex ]->position = position;
@@ -176,7 +175,7 @@ int readScene( char *sceneFileName, shape ***objects, camera *camera, int *numbe
             }
             else if ( tempPropString == "normal:" ) {
 
-                float normal[3] = { 0, 0, 0 };
+                float *normal = new float[3];
                 fscanf( stream, "%f %f %f", &( normal[0] ), &( normal[1] ), &( normal[2] ) );
                 // std::cout << "SCANNED NORMAL\n";
                 ( *objects )[ objectsTableIndex ]->setNormal( normal );
@@ -185,7 +184,7 @@ int readScene( char *sceneFileName, shape ***objects, camera *camera, int *numbe
             }
             else if ( tempPropString == "c_diff:" ) {
 
-                float cDiff[3] = { 0, 0, 0 };
+                float *cDiff = new float[3];
                 fscanf( stream, "%f %f %f", &( cDiff[0] ), &( cDiff[1] ), &( cDiff[2] ) );
                 // std::cout << "SCANNED C_DIFF\n";
                 ( *objects )[ objectsTableIndex ]->cDiff = cDiff;
@@ -249,38 +248,45 @@ int main(int argc, char *argv[])
                     std::cout << "Object is a plane.\n";
                 }
                 else {
-                    std::cerr << "Error: Undefined object in array.\n";
-                    std::cout << shapeTypeString << "\n";
-                    assert( 1 != 1 );
+                    std::cerr << "Error: Undefined object in array:" << shapeTypeString << "\n";
+                    return 1;
                 }
 
             }
             // --- TEMP
 
-            std::cout << "TEST\n";
-
             int imgWidth = std::stof(argv[1] );
             int imgHeight = std::stof( argv[2] );
             //float R_o[3] = { 0, 0, 0 };
-
-            
-            float testHeight = camera.height; // copy to a local variable
-            std::cout << "Test height = " << testHeight << std::endl;
 
 
             for ( int imgY=0; imgY<imgHeight; imgY++ ) {
                 for ( int imgX=0; imgX<imgWidth; imgX++ ) {
 
-                    // std::cout << "Pixel " << imgY << imgX << "\n";
                     float rDistX = -0.5f * camera.width + imgX * ( camera.width / imgWidth ) + ( camera.width / imgWidth ) / 2.0f;
-                    //float rDistY = -0.5f * camera.height + imgY * ( camera.height / imgHeight ) + ( camera.height / imgHeight ) / 2.0f;
-                    //float rVector[3] = { rDistX, rDistY, 1 };
+                    float rDistY = -0.5f * camera.height + imgY * ( camera.height / imgHeight ) + ( camera.height / imgHeight ) / 2.0f;
+                    float rVector[3] = { rDistX, rDistY, 1 };
+                    float R_d[3] = { 0, 0, 0 };
+                    v3_normalize( R_d, rVector );
 
-                    std::cout << rDistX << " " << "\n";
-                    //std::cout << rDistY << " " << "\n";
+                    std::cout << R_d[0] << " " << R_d[1] << " " << R_d[2] << "\n";
 
-                    //float R_d[3] = { 0, 0, 0 };
-                    //v3_normalize( R_d, rVector );
+                    for ( int index=0; index<numberOfShapes; index++ ) {
+
+                        std::string objectType = objects[ index ]->getShapeType();
+
+                        if ( objectType == "Sphere" ) {
+                            objects[ index ]->intersect();
+                        }
+                        else if ( objectType == "Plane" ) {
+                            objects[ index ]->intersect();
+                        }
+                        else {
+                            std::cerr << "Error: Intersection called for invalid object.";
+                            return 1;
+                        }
+
+                    }
 
                 }
             }
@@ -288,7 +294,10 @@ int main(int argc, char *argv[])
         }
 
         // Deallocate
-        
+        for ( int index=0; index<numberOfShapes; index++ )
+            delete objects[ index ];
+        delete[] objects;
+
     }
 
     return 0;
