@@ -25,7 +25,7 @@ struct shape {
     virtual ~shape() {}
 
     // float *rayOrigin, float *rayDirection
-    virtual void intersect() {
+    virtual void intersect( float *R_o, float *R_d ) {
         std::cerr << "Error: Cannot call intersect of base class \'Shape.\'\n";
     }
     virtual std::string getShapeType() {
@@ -52,8 +52,16 @@ struct sphere : shape {
 
     float radius;
 
-    void intersect(  ) {
-        std::cout << "Placeholder: Calculate intersection for sphere.\n";
+    void intersect( float *R_o, float *R_d ) {
+
+        std::cout << "Calculate intersection for sphere.\n";
+
+        float fromCenterToOrigin[3];
+        v3_from_points( fromCenterToOrigin, this->position, R_o );
+        //std::cout << "From Vector: " <<  fromVector[0] << " " << fromVector[1] << " " << fromVector[2] << "\n";
+        
+        
+
     }
     virtual std::string getShapeType() {
         std::string shapeType = "Sphere";
@@ -72,11 +80,10 @@ struct sphere : shape {
 
 struct plane : shape {
 
-    
     float *normal;
 
-    void intersect() {
-        std::cout << "Placeholder: Calculate intersection for plane.\n";
+    void intersect( float *R_o, float *R_d ) {
+        std::cout << "Calculate intersection for plane.\n";
     }
     virtual std::string getShapeType() {
         std::string shapeType = "Plane";
@@ -234,7 +241,7 @@ int main(int argc, char *argv[])
 
             assert( numberOfShapes > 0 );
             
-            // */ TEMPORARY PRINT OBJECTS
+            /*
             std::cout << numberOfShapes << " shapes in array.\n\n";
 
             for ( int index=0; index<( numberOfShapes ); index++ ) {
@@ -253,33 +260,36 @@ int main(int argc, char *argv[])
                 }
 
             }
-            // --- TEMP
+            */
 
             int imgWidth = std::stof(argv[1] );
             int imgHeight = std::stof( argv[2] );
-            //float R_o[3] = { 0, 0, 0 };
+            float R_o[3] = { 0, 0, 0 };
 
 
             for ( int imgY=0; imgY<imgHeight; imgY++ ) {
+
+                float rDistY = -0.5f * camera.height + imgY * ( camera.height / imgHeight ) + ( camera.height / imgHeight ) / 2.0f;
+                
                 for ( int imgX=0; imgX<imgWidth; imgX++ ) {
 
                     float rDistX = -0.5f * camera.width + imgX * ( camera.width / imgWidth ) + ( camera.width / imgWidth ) / 2.0f;
-                    float rDistY = -0.5f * camera.height + imgY * ( camera.height / imgHeight ) + ( camera.height / imgHeight ) / 2.0f;
-                    float rVector[3] = { rDistX, rDistY, 1 };
+                    
+                    float rVector[3] = { rDistX, rDistY, 1 }; // DO I NEED -Z VECTOR?
                     float R_d[3] = { 0, 0, 0 };
                     v3_normalize( R_d, rVector );
 
-                    std::cout << R_d[0] << " " << R_d[1] << " " << R_d[2] << "\n";
+                    std::cout << "\n" << R_d[0] << " " << R_d[1] << " " << R_d[2] << "\n";
 
                     for ( int index=0; index<numberOfShapes; index++ ) {
 
                         std::string objectType = objects[ index ]->getShapeType();
 
                         if ( objectType == "Sphere" ) {
-                            objects[ index ]->intersect();
+                            objects[ index ]->intersect( R_o, R_d );
                         }
                         else if ( objectType == "Plane" ) {
-                            objects[ index ]->intersect();
+                            objects[ index ]->intersect( R_o, R_d );
                         }
                         else {
                             std::cerr << "Error: Intersection called for invalid object.";
