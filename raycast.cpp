@@ -3,6 +3,8 @@
 #include <assert.h>
 #include <cstring>
 #include <string>
+#include <limits>
+#include <cmath>
 #include "ppm.h"
 
 extern "C" {
@@ -25,8 +27,9 @@ struct shape {
     virtual ~shape() {}
 
     // float *rayOrigin, float *rayDirection
-    virtual void intersect( float *R_o, float *R_d ) {
+    virtual float intersect( float *R_o, float *R_d ) {
         std::cerr << "Error: Cannot call intersect of base class \'Shape.\'\n";
+        return 0.0f;
     }
     virtual std::string getShapeType() {
         std::string shapeType = "Base";
@@ -52,15 +55,35 @@ struct sphere : shape {
 
     float radius;
 
-    void intersect( float *R_o, float *R_d ) {
+    float intersect( float *R_o, float *R_d ) {
 
-        std::cout << "Calculate intersection for sphere.\n";
+        //float A = ( R_d[0] * R_d[0] ) + ( R_d[1] * R_d[1] ) + ( R_d[2] * R_d[2] ); // Should always equal 1
+        float A = 1;
+        float B = 2.0f * ( R_d[0] * ( R_o[0] - this->position[0] ) 
+                         + R_d[1] * ( R_o[1] - this->position[1] ) 
+                         + R_d[2] * ( R_o[2] - this->position[2] ) );
+        float C = ( R_o[0] - this->position[0] ) * ( R_o[0] - this->position[0] )
+                + ( R_o[1] - this->position[1] ) * ( R_o[1] - this->position[1] )
+                + ( R_o[2] - this->position[2] ) * ( R_o[2] - this->position[2] )
+                - ( this->radius * this->radius );
 
-        float fromCenterToOrigin[3];
-        v3_from_points( fromCenterToOrigin, this->position, R_o );
-        //std::cout << "From Vector: " <<  fromVector[0] << " " << fromVector[1] << " " << fromVector[2] << "\n";
+        float discriminant = ( B * B ) - ( 4 * C );
         
+        if ( discriminant < 0 ) {
+            return std::numeric_limits<float>::infinity();
+        }
+
+        float t0 = ( -1 * B - std::sqrt( discriminant ) ) / 2.0f;
+        float t1 = ( -1 * B + std::sqrt( discriminant ) ) / 2.0f;
+
+        std::cout << "A: " <<  A << " B: " << B << " C: " << C << " Discriminant: " << discriminant << " t0: " << t0 << " t1: " << t1 << "\n";
         
+        if ( t1 < t0 && t1 > 0 ) 
+            return t1;
+        else if ( t0 > 0 ) 
+            return t0;
+        
+        return std::numeric_limits<float>::infinity();
 
     }
     virtual std::string getShapeType() {
@@ -82,8 +105,9 @@ struct plane : shape {
 
     float *normal;
 
-    void intersect( float *R_o, float *R_d ) {
-        std::cout << "Calculate intersection for plane.\n";
+    float intersect( float *R_o, float *R_d ) {
+        // std::cout << "Calculate intersection for plane.\n";
+        return std::numeric_limits<float>::infinity();
     }
     virtual std::string getShapeType() {
         std::string shapeType = "Plane";
@@ -279,21 +303,34 @@ int main(int argc, char *argv[])
                     float R_d[3] = { 0, 0, 0 };
                     v3_normalize( R_d, rVector );
 
-                    std::cout << "\n" << R_d[0] << " " << R_d[1] << " " << R_d[2] << "\n";
+                    // std::cout << "\n" << R_d[0] << " " << R_d[1] << " " << R_d[2] << "\n";
+
+                    float closestT = std::numeric_limits<float>::infinity();
+                    float closestObjectIndex = -1;
+
+                    std::cout << "\nLoop objects\n";
 
                     for ( int index=0; index<numberOfShapes; index++ ) {
 
                         std::string objectType = objects[ index ]->getShapeType();
+                        float intersectedT;
 
                         if ( objectType == "Sphere" ) {
-                            objects[ index ]->intersect( R_o, R_d );
+                            intersectedT = objects[ index ]->intersect( R_o, R_d );
                         }
                         else if ( objectType == "Plane" ) {
-                            objects[ index ]->intersect( R_o, R_d );
+                            intersectedT = objects[ index ]->intersect( R_o, R_d );
                         }
                         else {
                             std::cerr << "Error: Intersection called for invalid object.";
                             return 1;
+                        }
+
+                        if ( intersectedT < closestT ) {
+                            closestT = intersectedT;
+                            closestObjectIndex = index;
+                            std::cout << "Closest object updated: " << intersectedT << " < " << closestT << "\n";
+                            std::cout << "Closest object index is now: " << closestObjectIndex << "\n";
                         }
 
                     }
