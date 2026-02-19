@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
 
                     float rDistX = -0.5f * camera.width + imgX * ( camera.width / imgWidth ) + ( camera.width / imgWidth ) / 2.0f;
                     
-                    float rVector[3] = { rDistX, rDistY, 1 }; // DO I NEED -Z VECTOR?
+                    float rVector[3] = { rDistX, rDistY, -1 }; // DO I NEED -Z VECTOR?
                     float R_d[3] = { 0, 0, 0 };
                     v3_normalize( R_d, rVector );
 
@@ -327,9 +327,9 @@ int main(int argc, char *argv[])
                         }
 
                         if ( intersectedT < closestT ) {
+                            std::cout << "Closest object updated: " << intersectedT << " < " << closestT << "\n";
                             closestT = intersectedT;
                             closestObjectIndex = index;
-                            std::cout << "Closest object updated: " << intersectedT << " < " << closestT << "\n";
                             std::cout << "Closest object index is now: " << closestObjectIndex << "\n";
                         }
 
