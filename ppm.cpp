@@ -53,7 +53,7 @@ void readPPM( char *fileName, int **pixmap, PPMFile *metadata ) {
 
 }
 
-void writePPM( char *fileName, int *pixMap, PPMFile *metadata ) {
+void writePPM( char *fileName, uint8_t *pixMap, PPMFile *metadata ) {
 
     printf( "Writing %s\n", fileName );
 

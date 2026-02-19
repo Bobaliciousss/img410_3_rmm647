@@ -282,7 +282,7 @@ int main(int argc, char *argv[])
             int imgHeight = std::stof( argv[2] );
             float R_o[3] = { 0, 0, 0 };
 
-            uint8_t *pixmap;
+            uint8_t pixmap[ imgHeight * imgWidth * 3 ];
 
             for ( int imgY=0; imgY<imgHeight; imgY++ ) {
 
@@ -329,20 +329,40 @@ int main(int argc, char *argv[])
                         
                     }
 
+                    uint8_t outputRGB[3] = { 0, 0, 0 };
+                    int pixmapIndex = ( imgY * imgWidth * 3 + imgX * 3 );
+
                     if ( closestObjectIndex > -1 ) {
 
-                        std::cout << "Set pixel color to " << objects[ closestObjectIndex ]->cDiff[0] << ", " << objects[ closestObjectIndex ]->cDiff[1] << ", " << objects[ closestObjectIndex ]->cDiff[2] << "\n";
-                    
-                    }
-                    else {
-
-                        std::cout << "Set pixel color to black (0, 0, 0).\n";
-
-                    }
+                        std::cout << "Set pixel color to closest object.\n";
                         
+                        outputRGB[0] = objects[ closestObjectIndex ]->cDiff[0] * 255;
+                        outputRGB[1] = objects[ closestObjectIndex ]->cDiff[1] * 255;
+                        outputRGB[2] = objects[ closestObjectIndex ]->cDiff[2] * 255;
+
+                    }
+                    else { // Doesn't do anything, remove this else when done with bug testing
+                        std::cout << "Set pixel color to black.\n";
+                    }
+
+                    pixmap[ pixmapIndex ] = outputRGB[0];
+                    pixmap[ pixmapIndex + 1 ] = outputRGB[1];
+                    pixmap[ pixmapIndex + 2 ] = outputRGB[2];
+
+                    std::cout << "OutputRGB colors are " << (int)outputRGB[0] << ", " << (int)outputRGB[1] << ", " << (int)outputRGB[2] << "\n";
+                    std::cout << "Pixel color is " << (int)pixmap[ pixmapIndex ] << ", " << (int)pixmap[ pixmapIndex + 1 ] << ", " << (int)pixmap[ pixmapIndex + 2 ] << "\n";
+
+                    
 
                 }
             }
+
+            PPMFile metadata;
+            metadata.width = imgWidth;
+            metadata.height = imgHeight;
+            metadata.mapSize = imgWidth * imgHeight * metadata.channels;
+            metadata.maxColor = 255;
+            writePPM( argv[4], pixmap, &metadata );
             
         }
 

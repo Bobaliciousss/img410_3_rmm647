@@ -22,6 +22,6 @@ void readPPM( char *fileName, int **pixmap, PPMFile *metadata );
 //      Second is the blurred pixel map
 //      Third is metadata with an updated max color value
 //      Dependents: blur.cpp
-void writePPM( char *fileName, int *pixmap, PPMFile *metadata );
+void writePPM( char *fileName, uint8_t *pixmap, PPMFile *metadata );
 
 #endif
