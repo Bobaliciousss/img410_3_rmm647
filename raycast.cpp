@@ -38,15 +38,8 @@ struct shape {
     virtual void setRadius( float radius ) {
         std::cerr << "Error: Cannot assign radius to non-sphere class.\n";
     }
-    virtual float getRadius() { 
-        std::cerr << "Error: Cannot get radius from from non-sphere class.\n";
-        assert( 1 != 1 );
-    }
     virtual void setNormal( float *normal ) {
         std::cerr << "Error: Cannot assign normal to non-plane class.\n";
-    }
-    virtual void getNormal( float *normal ) { 
-        std::cerr << "Error: Cannot get radius from from non-sphere class.\n";
     }
 
 };
@@ -58,7 +51,7 @@ struct sphere : shape {
     float intersect( float *R_o, float *R_d ) {
 
         //float A = ( R_d[0] * R_d[0] ) + ( R_d[1] * R_d[1] ) + ( R_d[2] * R_d[2] ); // Should always equal 1
-        float A = 1;
+        //float A = 1;
         float B = 2.0f * ( R_d[0] * ( R_o[0] - this->position[0] ) 
                          + R_d[1] * ( R_o[1] - this->position[1] ) 
                          + R_d[2] * ( R_o[2] - this->position[2] ) );
@@ -76,11 +69,11 @@ struct sphere : shape {
         float t0 = ( -1 * B - std::sqrt( discriminant ) ) / 2.0f;
         float t1 = ( -1 * B + std::sqrt( discriminant ) ) / 2.0f;
 
-        std::cout << "A: " <<  A << " B: " << B << " C: " << C << " Discriminant: " << discriminant << " t0: " << t0 << " t1: " << t1 << "\n";
+        //std::cout << "Sphere A: " <<  A << " B: " << B << " C: " << C << " Discriminant: " << discriminant << " t0: " << t0 << " t1: " << t1 << "\n";
         
-        if ( t1 < t0 && t1 > 0 ) 
+        if ( t1 < t0 && t1 >= 0 ) 
             return t1;
-        else if ( t0 > 0 ) 
+        else if ( t0 >= 0 ) 
             return t0;
         
         return std::numeric_limits<float>::infinity();
@@ -92,12 +85,8 @@ struct sphere : shape {
     }
     void setRadius(  float rds ) {
         this->radius = rds;
-        std::cout << "Notice: Assigned radius property to sphere.\n";
+        //std::cout << "Notice: Assigned radius property to sphere.\n";
     }
-    virtual float getRadius() { 
-        std::cout << "Notice: Got radius property from sphere.\n";
-        return radius;
-    };
 
 };
 
@@ -106,7 +95,16 @@ struct plane : shape {
     float *normal;
 
     float intersect( float *R_o, float *R_d ) {
-        // std::cout << "Calculate intersection for plane.\n";
+        
+        float magnitude = v3_length( this->position );
+        float t = ( this->normal[0] * R_o[0] + this->normal[1] * R_o[1] + this->normal[2] * R_o[2] + magnitude ) 
+                / ( this->normal[0] * R_d[0] + this->normal[1] * R_d[1] + this->normal[2] * R_d[2] );
+
+        //std::cout << "Plane t: " << t << "\n";
+
+        if ( t >= 0 ) 
+            return t; 
+
         return std::numeric_limits<float>::infinity();
     }
     virtual std::string getShapeType() {
@@ -115,14 +113,8 @@ struct plane : shape {
     }
     void setNormal(  float *nml ) {
         this->normal = nml;
-        std::cout << "Notice: Assigned normal property to plane.\n";
+        //std::cout << "Notice: Assigned normal property to plane.\n";
     }
-    virtual void getNormal( float *nml ) { 
-        for ( int index=0; index<2; index++ ) {
-            nml[ index ] = normal[ index ];
-        }
-        std::cout << "Notice: Got normal property from plane.\n";
-    };
 
 };
 
@@ -290,6 +282,7 @@ int main(int argc, char *argv[])
             int imgHeight = std::stof( argv[2] );
             float R_o[3] = { 0, 0, 0 };
 
+            uint8_t *pixmap;
 
             for ( int imgY=0; imgY<imgHeight; imgY++ ) {
 
@@ -306,9 +299,9 @@ int main(int argc, char *argv[])
                     // std::cout << "\n" << R_d[0] << " " << R_d[1] << " " << R_d[2] << "\n";
 
                     float closestT = std::numeric_limits<float>::infinity();
-                    float closestObjectIndex = -1;
+                    int closestObjectIndex = -1;
 
-                    std::cout << "\nLoop objects\n";
+                    // std::cout << "\nLoop objects\n";
 
                     for ( int index=0; index<numberOfShapes; index++ ) {
 
@@ -327,13 +320,26 @@ int main(int argc, char *argv[])
                         }
 
                         if ( intersectedT < closestT ) {
-                            std::cout << "Closest object updated: " << intersectedT << " < " << closestT << "\n";
+                            //std::cout << "Closest object updated: " << intersectedT << " < " << closestT << "\n";
                             closestT = intersectedT;
                             closestObjectIndex = index;
-                            std::cout << "Closest object index is now: " << closestObjectIndex << "\n";
+                            //std::cout << "Closest object index is now: " << closestObjectIndex << "\n";
                         }
 
+                        
                     }
+
+                    if ( closestObjectIndex > -1 ) {
+
+                        std::cout << "Set pixel color to " << objects[ closestObjectIndex ]->cDiff[0] << ", " << objects[ closestObjectIndex ]->cDiff[1] << ", " << objects[ closestObjectIndex ]->cDiff[2] << "\n";
+                    
+                    }
+                    else {
+
+                        std::cout << "Set pixel color to black (0, 0, 0).\n";
+
+                    }
+                        
 
                 }
             }
